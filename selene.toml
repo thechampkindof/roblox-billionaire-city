@@ -1,0 +1,10 @@
+std = "roblox"
+
+[lints]
+# Roblox code legitimately uses method-style calls on Instances.
+mixed_table = "allow"
+# We use `--!strict` and the Luau type checker for this class of mistake.
+incorrect_standard_library_use = "deny"
+unscoped_variables = "deny"
+multiple_statements = "allow"
+shadowing = "warn"

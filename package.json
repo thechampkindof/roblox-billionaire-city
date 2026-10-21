@@ -1,0 +1,25 @@
+{
+  "name": "billionaire-city-tycoon-tooling",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Optional convenience toolchain for headless checks. The official toolchain lives in rokit.toml.",
+  "type": "module",
+  "scripts": {
+    "test": "node tools/run_tests.mjs",
+    "check:syntax": "node tools/syntax_check.mjs",
+    "check:wiring": "node tools/wiring_check.mjs",
+    "validate": "node tools/run_luau.mjs tools/content_validate.luau",
+    "size": "node tools/run_luau.mjs tools/size_budget.luau",
+    "sim": "node tools/run_luau.mjs tools/economy_sim.luau",
+    "sim:smoke": "node tools/run_luau.mjs tools/economy_sim.luau --smoke",
+    "format": "stylua .",
+    "format:check": "stylua --check .",
+    "verify": "npm run check:syntax && npm run check:wiring && npm test && npm run sim:server && npm run sim:client && npm run validate && npm run sim:smoke && npm run size",
+    "sim:server": "node tools/server_sim.mjs",
+    "sim:client": "node tools/client_sim.mjs"
+  },
+  "devDependencies": {
+    "@johnnymorganz/stylua-bin": "2.6.0",
+    "@luau-rs/luau": "0.739.0"
+  }
+}

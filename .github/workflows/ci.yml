@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  luau:
+    name: Format, lint, test, validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install headless toolchain
+        run: npm install --no-audit --no-fund
+
+      - name: Install Rokit tools
+        uses: CompeyDev/setup-rokit@v0.1.2
+        with:
+          cache: true
+
+      - name: Install pinned tools
+        run: rokit install
+
+      - name: StyLua
+        run: stylua --check .
+
+      - name: Selene
+        run: selene src tests tools
+
+      - name: Luau type check (if available)
+        run: |
+          if command -v luau-analyze >/dev/null 2>&1; then
+            luau-analyze src tests tools || true
+          else
+            echo "luau-analyze not installed; skipping (NOT RUN)"
+          fi
+
+      - name: Unit tests
+        run: node tools/run_tests.mjs
+
+      - name: Syntax check
+        run: node tools/syntax_check.mjs
+
+      - name: Wiring check
+        run: node tools/wiring_check.mjs
+
+      - name: Server simulation
+        run: node tools/server_sim.mjs
+
+      - name: Client simulation
+        run: node tools/client_sim.mjs
+
+      - name: Content validation
+        run: node tools/run_luau.mjs tools/content_validate.luau
+
+      - name: Economy smoke simulation
+        run: node tools/run_luau.mjs tools/economy_sim.luau --smoke
+
+      - name: Economy full simulation
+        run: node tools/run_luau.mjs tools/economy_sim.luau
+
+      - name: Profile size budget
+        run: node tools/run_luau.mjs tools/size_budget.luau
+
+      - name: Build place
+        run: rojo build -o build/BillionaireCityTycoon.rbxl
+
+      - name: Upload place
+        uses: actions/upload-artifact@v4
+        with:
+          name: BillionaireCityTycoon
+          path: build/BillionaireCityTycoon.rbxl
+          if-no-files-found: error
