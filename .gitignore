@@ -1,0 +1,26 @@
+# Build output
+/build/
+*.rbxl
+*.rbxlx
+*.rbxl.lock
+*.rbxlx.lock
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Tooling
+node_modules/
+package-lock.json
+.rokit/
+~/.rokit
+
+# Local test / simulator output
+*.log
+/tmp/
+.tests/
+
+# Lua
+*.luac
