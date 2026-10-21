@@ -3,6 +3,18 @@
 Every choice made where the brief was silent, ambiguous or self-conflicting. Newest
 first. Each entry: what we chose, why, and what would change our mind.
 
+## D-017 · The client harness fakes the Roblox UI surface
+
+**Chose:** `tools/harness/Shim.luau` also provides lazily-created instance events
+(`Activated`, `CharacterAdded`), default GUI properties (`AbsoluteSize`, `Text`), a cached
+`Enum` (so identity comparisons hold), `TweenService`, `TweenInfo`, `RaycastParams` and a
+camera with a settable raycast result. `client_sim.mjs` boots the real client bundle and
+taps parcels, buildings and every panel tab.
+**Why:** the first client boot found that `Kit.scrollList` never parented its ScrollingFrame
+(the entire panel content area would have been invisible in game) and that closing a panel
+recursed through the UI controller's callback. Neither is visible to a compiler.
+**Would change:** keep it; extend the shim as new UI surfaces appear (drag, pinch, sounds).
+
 ## D-016 · A headless server harness, not just static checks
 
 **Chose:** `tools/harness/Shim.luau` + `tools/server_sim.mjs` boot the real services

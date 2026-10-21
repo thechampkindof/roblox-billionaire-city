@@ -238,6 +238,9 @@ function ParcelPanel.create(gui: ScreenGui, callbacks: Callbacks?): Panel
 			ParcelPanel.render()
 		end,
 		close = function()
+			if not frame.Visible then
+				return
+			end
 			currentParcel = nil
 			frame.Visible = false
 			scrim.Visible = false

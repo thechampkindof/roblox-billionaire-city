@@ -542,6 +542,11 @@ function BuildingPanel.create(
 			setTab(currentTab)
 		end,
 		close = function()
+			-- Idempotent: closing an already closed panel must not re-enter the callback
+			-- (the UI controller's callback also closes the neighbour panel).
+			if not frame.Visible then
+				return
+			end
 			currentUid = nil
 			scrim.Visible = false
 			frame.Visible = false

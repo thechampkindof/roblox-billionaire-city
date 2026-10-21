@@ -185,6 +185,7 @@ function Kit.scrollList(parent: Instance, props: Props?): (ScrollingFrame, Frame
 	}) :: UIListLayout
 	layout.Parent = content
 	content.Parent = scroll
+	scroll.Parent = parent
 
 	local function fit()
 		content.Size = UDim2.new(1, -8, 0, layout.AbsoluteContentSize.Y)

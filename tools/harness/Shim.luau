@@ -169,6 +169,12 @@ end
 function CFrame.Angles(): any
 	return CFrame.new(0, 0, 0)
 end
+function CFrame.lookAt(from: any, _to: any): any
+	return CFrame.new(from)
+end
+function CFrame:Lerp(_other: any, _alpha: number?): any
+	return CFrame.new(self.Position)
+end
 CFrame.__mul = function(a, b)
 	return CFrame.new(a.Position + (b.Position or Vector3.new(0, 0, 0)))
 end
@@ -210,11 +216,21 @@ end
 
 -- Enums -------------------------------------------------------------------------
 
+-- Enum items are cached so `Enum.UserInputType.MouseButton1 == Enum.UserInputType.MouseButton1`
+-- holds, exactly like Roblox (the input code compares them by identity).
+local enumCache: { [string]: any } = {}
 local Enum = setmetatable({}, {
 	__index = function(_self, enumType: string)
+		local items: { [string]: any } = {}
 		return setmetatable({}, {
 			__index = function(_e, name: string)
-				return { EnumType = enumType, Name = name }
+				local key = `{enumType}.{name}`
+				local item = enumCache[key]
+				if not item then
+					item = { EnumType = enumType, Name = name }
+					enumCache[key] = item
+				end
+				return item
 			end,
 		})
 	end,
@@ -300,13 +316,20 @@ local SUPER = {
 	UICorner = { "Instance" },
 	UIScale = { "Instance" },
 	SelectionBox = { "Instance" },
-	ScreenGui = { "Instance" },
+	ScreenGui = { "Instance", "LayerCollector" },
 	DataStore = { "Instance" },
 	Script = { "Instance" },
+	Camera = { "Instance" },
+	PlayerGui = { "Instance" },
+
+	Frame = { "Instance" },
+	TextButton = { "Instance" },
+	ImageLabel = { "Instance" },
 }
 
 local Methods = {}
 local InstanceMT = {}
+local localPlayer: any = nil
 
 local function newInstance(className: string): any
 	local self = setmetatable({
@@ -356,6 +379,50 @@ local function setParent(self: any, value: any)
 	end
 end
 
+-- Properties the UI reads before anyone sets them.
+local DEFAULTS: { [string]: () -> any } = {
+	AbsoluteSize = function()
+		return Vector2.new(1280, 720)
+	end,
+	AbsoluteContentSize = function()
+		return Vector2.new(0, 0)
+	end,
+	AbsolutePosition = function()
+		return Vector2.new(0, 0)
+	end,
+	Text = function()
+		return ""
+	end,
+	Visible = function()
+		return true
+	end,
+	Transparency = function()
+		return 0
+	end,
+	BackgroundTransparency = function()
+		return 1
+	end,
+	ZIndex = function()
+		return 1
+	end,
+	LayoutOrder = function()
+		return 0
+	end,
+}
+
+-- Instance events the UI connects to. Created lazily so any instance can have them.
+local SIGNAL_PROPERTIES: { [string]: boolean } = {
+	Activated = true,
+	MouseButton1Click = true,
+	MouseEnter = true,
+	MouseLeave = true,
+	Changed = true,
+	ChildAdded = true,
+	ChildRemoved = true,
+	CharacterAdded = true,
+	CharacterRemoving = true,
+}
+
 InstanceMT.__index = function(self: any, key: string)
 	local method = Methods[key]
 	if method then
@@ -367,6 +434,15 @@ InstanceMT.__index = function(self: any, key: string)
 	end
 	if key == "Parent" then
 		return getParent(self)
+	end
+	if SIGNAL_PROPERTIES[key] then
+		local signal = newSignal(`${rawget(self, "Name")}.{key}`)
+		rawset(self, key, signal)
+		return signal
+	end
+	local fallback = DEFAULTS[key]
+	if fallback then
+		return fallback()
 	end
 	return nil
 end
@@ -504,13 +580,19 @@ function Methods.FireClient(self: any, player: any, ...: any)
 end
 
 function Methods.FireServer(self: any, ...: any)
+	-- Roblox prepends the sending player; the harness lets a caller pass one explicitly.
+	local args = { n = select("#", ...), ... }
+	local first = args[1]
+	local sender = if first ~= nil
+			and type(first) == "table"
+			and rawget(first, "ClassName") == "Player"
+		then first
+		else localPlayer
+	local forwarded =
+		table.pack(sender, table.unpack(args, if sender == first then 2 else 1, args.n))
 	local event = rawget(self, "OnServerEvent")
-	local listener = rawget(self, "_serverListener")
-	if listener then
-		listener(...)
-	end
 	if event then
-		event:Fire(...)
+		event:Fire(table.unpack(forwarded, 1, forwarded.n))
 	end
 end
 
@@ -519,6 +601,29 @@ function Methods.FireAllClients(self: any, ...: any)
 	if sink then
 		sink(nil, rawget(self, "Name"), ...)
 	end
+end
+
+function Methods.GetPropertyChangedSignal(self: any, _property: string)
+	local signals = rawget(self, "_propertySignals")
+	if not signals then
+		signals = {}
+		rawset(self, "_propertySignals", signals)
+	end
+	local signal = signals[_property]
+	if not signal then
+		signal = newSignal(`Changed:{_property}`)
+		signals[_property] = signal
+	end
+	return signal
+end
+
+function Methods.FindFirstChildWhichIsA(self: any, className: string): any
+	for _, descendant in ipairs(Methods.GetDescendants(self)) do
+		if Methods.IsA(descendant, className) then
+			return descendant
+		end
+	end
+	return nil
 end
 
 function Methods.GetPlayers(self: any): { any }
@@ -636,6 +741,12 @@ local gameObject = {
 	Workspace = workspace,
 }
 
+local TweenInfoShim = {
+	new = function(duration: number?, _style: any?, _direction: any?, repeatCount: number?)
+		return { Time = duration or 0, RepeatCount = repeatCount or 0 }
+	end,
+}
+
 local RandomShim = {
 	new = function(_seed: number?)
 		return {
@@ -671,9 +782,71 @@ function Shim.install()
 	env.UDim2 = UDim2
 	env.Rect = Rect
 	env.Random = RandomShim
+	env.TweenInfo = TweenInfoShim
+	env.RaycastParams = {
+		new = function()
+			return { FilterType = nil, FilterDescendantsInstances = {} }
+		end,
+	}
 end
 
 -- Harness-facing helpers -------------------------------------------------------
+
+--[[ Installs the client-only services and gives `player` a PlayerGui. ]]
+function Shim.installClient(player: any)
+	local tweenService = services.TweenService
+	if not tweenService then
+		tweenService = newService("TweenService", "TweenService")
+		rawset(tweenService, "Create", function(_self: any, _instance: any, _info: any, _props: any)
+			local tween = { Completed = newSignal("Completed") }
+			function tween:Play()
+				tween.Playing = true
+			end
+			function tween:Cancel() end
+			function tween:Pause() end
+			return tween
+		end)
+		services.TweenService = tweenService
+	end
+
+	local camera = rawget(workspace, "CurrentCamera")
+	if not camera then
+		camera = newInstance("Camera")
+		rawset(camera, "Name", "Camera")
+		rawset(camera, "CFrame", CFrame.new(0, 60, 60))
+		rawset(camera, "CameraType", Enum.CameraType.Scriptable)
+		rawset(camera, "ViewportPointToRay", function(_self: any, _x: number, _y: number)
+			return { Origin = Vector3.new(0, 60, 60), Direction = Vector3.new(0, -1, 0) }
+		end)
+		rawset(workspace, "CurrentCamera", camera)
+	end
+
+	local raycastResult: any = nil
+	rawset(workspace, "Raycast", function(_self: any, _origin: any, _direction: any, _params: any)
+		return raycastResult
+	end)
+	rawset(workspace, "_setRaycast", function(_self: any, result: any)
+		raycastResult = result
+	end)
+
+	rawset(players, "LocalPlayer", player)
+	localPlayer = player
+	local playerGui = newInstance("PlayerGui")
+	rawset(playerGui, "Name", "PlayerGui")
+	setParent(playerGui, player)
+	return playerGui
+end
+
+--[[ Points the next client raycast at `instance` (used to simulate a tap). ]]
+function Shim.aimAt(instance: any)
+	local setter = rawget(workspace, "_setRaycast")
+	if setter then
+		setter(
+			workspace,
+			{ Instance = instance, Position = Vector3.new(0, 1, 0), Normal = Vector3.new(0, 1, 0) }
+		)
+	end
+end
 
 function Shim.createPlayer(userId: number, name: string): any
 	local player = newInstance("Player")

@@ -7,6 +7,7 @@ Short orientation for anyone (human or agent) changing this repository.
 ```bash
 node tools/run_tests.mjs                       # unit tests (headless Luau)
 node tools/server_sim.mjs                      # boots the real server, plays the loop
+node tools/client_sim.mjs                      # boots the real client, taps through the UI
 node tools/syntax_check.mjs                    # every .luau file compiles
 node tools/wiring_check.mjs                    # requires, Content paths, intents, exports
 node tools/run_luau.mjs tools/content_validate.luau
@@ -16,7 +17,7 @@ stylua --check . && selene src                 # with Rokit tools installed
 rojo build -o build/BillionaireCityTycoon.rbxl
 ```
 
-Run the first seven before every commit. If a check cannot run in your environment, say so
+Run the first eight before every commit. If a check cannot run in your environment, say so
 in the PR instead of assuming it passed.
 
 ## Layout
@@ -31,8 +32,9 @@ in the PR instead of assuming it passed.
 - `src/server/Services` — one responsibility each, wired in `Services/Registry` and
   listed in `src/server/init.server.luau`.
 - `src/client` — controllers + UI, all built in code.
-- `tools/harness` — Roblox shim + headless playthrough (`server_sim.mjs`). If you add a
-  service call that the shim cannot satisfy, extend the shim instead of skipping the test.
+- `tools/harness` — Roblox shim + headless playthroughs (`server_sim.mjs`, `client_sim.mjs`).
+  If you add an API call the shim cannot satisfy, extend the shim instead of skipping the
+  test. These are the only automated tests that execute the services and the UI.
 - `docs/` — GDD and ARCHITECTURE are the brief verbatim; `DECISIONS.md` records every
   choice we made where the brief was silent.
 

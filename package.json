@@ -14,8 +14,9 @@
     "sim:smoke": "node tools/run_luau.mjs tools/economy_sim.luau --smoke",
     "format": "stylua .",
     "format:check": "stylua --check .",
-    "verify": "npm run check:syntax && npm run check:wiring && npm test && npm run sim:server && npm run validate && npm run sim:smoke && npm run size",
-    "sim:server": "node tools/server_sim.mjs"
+    "verify": "npm run check:syntax && npm run check:wiring && npm test && npm run sim:server && npm run sim:client && npm run validate && npm run sim:smoke && npm run size",
+    "sim:server": "node tools/server_sim.mjs",
+    "sim:client": "node tools/client_sim.mjs"
   },
   "devDependencies": {
     "@johnnymorganz/stylua-bin": "2.6.0",

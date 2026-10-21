@@ -46,12 +46,14 @@ Phase 0 (foundation) and Phase 1 (playable vertical slice) are implemented:
 
 ## Risks
 
-- **Client runtime paths are unexecuted.** The server layer now runs headlessly
-  (`tools/server_sim.mjs`, 47 assertions), but the client controllers and UI have only been
-  compiled and reviewed. The first Studio playtest is a bug hunt for the client.
-- **First harness run found seven real defects** (require paths, missing bootstrap, wiped
-  `LastSaved`, shadowed `ConstructionService.Start`, `Config.Flags` misuse, double `PivotTo`,
-  an unfriendly rate-limit message). Assume more are hiding behind the client.
+- **Nothing has run in Studio.** Both layers now run headlessly (47 server + 23 client
+  assertions), but rendering, replication, input feel and mobile layout are still only
+  designed, not observed. The first playtest is a bug hunt for layout and game feel.
+- **The harnesses found eleven real defects** on first run: broken Shared require paths,
+  missing bootstrap, wiped `LastSaved`, shadowed `ConstructionService.Start`, `Config.Flags`
+  misuse, double `PivotTo`, an unfriendly rate-limit message, an unparented scroll frame,
+  recursive panel close, an unstable `Enum` comparison in the input path and toast tweens
+  without `TweenInfo`. Assume a similar density of cosmetic bugs remains.
 - **Economy tuning** is provisional and measured only against a greedy bot.
 - **Rojo build** is unverified in this environment (no glibc); CI is the authority.
 - **Profile growth** in Phase 2 (supply chains, collections) is the next budget pressure.

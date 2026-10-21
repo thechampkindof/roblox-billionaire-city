@@ -120,8 +120,13 @@ function UIController.Start()
 		end,
 	})
 
+	-- Called when the player dismisses the building panel: clear the selection and the
+	-- neighbouring sheet, without re-entering `close()` through `togglePanels`.
 	buildingPanel.setOnClose(function()
-		togglePanels(nil, nil)
+		if parcelPanel then
+			parcelPanel.close()
+		end
+		PlotController.HighlightBuilding(nil)
 	end)
 
 	hud.setHandlers({
