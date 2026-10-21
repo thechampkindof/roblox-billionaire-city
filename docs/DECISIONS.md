@@ -3,6 +3,26 @@
 Every choice made where the brief was silent, ambiguous or self-conflicting. Newest
 first. Each entry: what we chose, why, and what would change our mind.
 
+## D-016 · A headless server harness, not just static checks
+
+**Chose:** `tools/harness/Shim.luau` + `tools/server_sim.mjs` boot the real services
+against a minimal Roblox environment (instances, signals, `task` scheduler, virtual
+`os.time()`, in-memory DataStore) and play the Phase 1 loop through the real intents.
+**Why:** the static checks could not see that `ConstructionService.Start` was shadowed by
+the lifecycle `Start()`, that `Bootstrap` was never called, or that `normalise()` erased
+`LastSaved`. The harness found all three (plus four more) in its first runs. It is 47
+assertions and under a second of CI time.
+**Would change:** delete it once Studio playtests are routine in CI (Roblox's own Open
+Cloud Luau execution could replace it), but keep the shim for regression testing.
+
+## D-015 · `script` is bound per chunk in the headless runtime
+
+**Chose:** `tools/luau_runtime.mjs` loads each module as `local script = ...; <source>`.
+**Why:** the earlier global-`script` emulation broke any `require(script.Parent.X)` that ran
+later (intent handlers), which is how every `NetService` handler loads its service. Real
+Roblox binds `script` lexically, so the runtime now does too.
+**Would change:** nothing; this matches Studio semantics.
+
 ## D-014 · Verification without Studio
 
 **Chose:** add `tools/syntax_check.mjs` (compiles every `.luau` with Luau) and

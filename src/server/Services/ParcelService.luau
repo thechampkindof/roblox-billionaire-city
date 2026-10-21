@@ -7,7 +7,7 @@
 	owned-parcel multiplier from Balance so land stays a real sink.
 ]]
 
-local Shared = script.Parent.Parent.Parent.ReplicatedStorage.Shared
+local Shared = game:GetService("ReplicatedStorage").Shared
 local Core = Shared.Core
 local Config = Shared.Config
 

@@ -54,6 +54,9 @@ jobs:
       - name: Wiring check
         run: node tools/wiring_check.mjs
 
+      - name: Server simulation
+        run: node tools/server_sim.mjs
+
       - name: Content validation
         run: node tools/run_luau.mjs tools/content_validate.luau
 

@@ -12,12 +12,13 @@
 
 local RunService = game:GetService("RunService")
 
-local Shared = script.Parent.Parent.Parent.ReplicatedStorage.Shared
+local Shared = game:GetService("ReplicatedStorage").Shared
 local Core = Shared.Core
 local Config = Shared.Config
 
 local Result = require(Core.Result)
 local Content = require(Config.Init)
+local Flags = require(Config.Flags)
 
 local DataService = require(script.Parent.DataService)
 local EconomyService = require(script.Parent.EconomyService)
@@ -34,7 +35,7 @@ function DebugService.isAllowed(player: Player): boolean
 	if not RunService:IsStudio() then
 		return false
 	end
-	if not Config.Flags.get("DebugTools") then
+	if not Flags.get("DebugTools") then
 		return false
 	end
 	for _, userId in ipairs(DebugService.ALLOWLIST) do
@@ -117,7 +118,7 @@ function DebugService.Run(player: Player, action: string): Result.Result<boolean
 end
 
 function DebugService.Init(registry: any)
-	if Config.Flags.get("DebugTools") and #DebugService.ALLOWLIST > 0 then
+	if Flags.get("DebugTools") and #DebugService.ALLOWLIST > 0 then
 		warn("[DebugService] debug tools are ENABLED for allow-listed players in Studio")
 	end
 end

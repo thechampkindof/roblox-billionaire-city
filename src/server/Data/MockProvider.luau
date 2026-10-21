@@ -5,7 +5,7 @@
 	provider, including optional artificial latency and failure injection.
 ]]
 
-local Shared = script.Parent.Parent.Parent.ReplicatedStorage.Shared
+local Shared = game:GetService("ReplicatedStorage").Shared
 local Core = Shared.Core
 local Result = require(Core.Result)
 local SessionLock = require(Core.SessionLock)

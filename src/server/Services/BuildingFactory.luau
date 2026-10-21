@@ -12,7 +12,7 @@
 
 local ServerStorage = game:GetService("ServerStorage")
 
-local Shared = script.Parent.Parent.Parent.ReplicatedStorage.Shared
+local Shared = game:GetService("ReplicatedStorage").Shared
 local Config = Shared.Config
 local Types = Shared.Core.Types
 local Content = require(Config.Init)
@@ -168,9 +168,10 @@ local function artSlot(buildingId: string, stage: string): Model?
 	return nil
 end
 
-local function finish(model: Model, def: Types.BuildingDef, stage: string, position: Vector3): Model
+--[[ Procedural parts are already placed in world space, so only cloned art slots are
+	pivoted into position (by the caller). ]]
+local function finish(model: Model, def: Types.BuildingDef, stage: string): Model
 	model.Name = `{def.id}_{stage}`
-	model:PivotTo(CFrame.new(position))
 	model:SetAttribute("BuildingDef", def.id)
 	model:SetAttribute("Stage", stage)
 	return model
@@ -180,7 +181,8 @@ end
 function BuildingFactory.Site(def: Types.BuildingDef, position: Vector3, progress: number): Model
 	local override = artSlot(def.id, if progress >= 1 then "finished" else "site")
 	if override and progress < 1 then
-		return finish(override, def, "site", position)
+		override:PivotTo(CFrame.new(position))
+		return finish(override, def, "site")
 	end
 
 	local palette = paletteFor(def.style)
@@ -233,8 +235,7 @@ function BuildingFactory.Site(def: Types.BuildingDef, position: Vector3, progres
 		)
 	end
 
-	model:PivotTo(CFrame.new(position))
-	return finish(model, def, "site", position)
+	return finish(model, def, "site")
 end
 
 --[[ Finished (or shell) building. Level adds floors, appearance adds trim, mastery adds gold. ]]
@@ -247,7 +248,8 @@ function BuildingFactory.Build(
 ): Model
 	local override = artSlot(def.id, if stage == "finished" then "finished" else "shell")
 	if override then
-		return finish(override, def, stage, position)
+		override:PivotTo(CFrame.new(position))
+		return finish(override, def, stage)
 	end
 
 	local palette = paletteFor(def.style)
@@ -343,8 +345,7 @@ function BuildingFactory.Build(
 		)
 	end
 
-	model:PivotTo(CFrame.new(position))
-	return finish(model, def, stage, position)
+	return finish(model, def, stage)
 end
 
 --[[ Adds the collector prompt above a building (client also uses attributes). ]]

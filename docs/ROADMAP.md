@@ -24,6 +24,8 @@ Legend: `[x]` done and verified · `[~]` done but only verified outside Studio (
       `economy_sim`, `size_budget`
 - [x] Studio-only debug tools behind three gates (Studio + flag + allow-list)
 - [x] Extra verification for sandboxes without Rokit: `syntax_check.mjs`, `wiring_check.mjs`
+- [x] Headless server harness (`tools/harness` + `server_sim.mjs`): boots the services and
+      plays the loop through the real intents — 47 assertions
 
 ## Phase 1 — Playable vertical slice (complete)
 

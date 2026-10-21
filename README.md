@@ -52,6 +52,7 @@ node tools/run_tests.mjs        # 108 unit tests: Core, Config, Net, Util
 node tools/run_luau.mjs tools/content_validate.luau
 node tools/run_luau.mjs tools/economy_sim.luau --smoke
 node tools/run_luau.mjs tools/size_budget.luau
+node tools/server_sim.mjs       # boots the real server and plays the loop (47 checks)
 node tools/syntax_check.mjs     # every Luau file compiles
 node tools/wiring_check.mjs     # requires, Content paths, intents, service methods
 ```
@@ -63,6 +64,12 @@ stylua --check .
 selene src
 lune run tools/content_validate.luau
 ```
+
+`tools/server_sim.mjs` is the interesting one: it installs a small Roblox shim
+(`tools/harness/Shim.luau`), boots every service, joins a fake player and drives the
+Phase 1 loop through the real intents — collect, upgrade, hire, build, save/reload,
+offline income, rate limits. It runs no graphics, but it executes every server path a
+Studio playtest would.
 
 CI runs all of the above (see `.github/workflows/ci.yml`).
 

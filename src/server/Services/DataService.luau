@@ -14,7 +14,7 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local DataStoreService = game:GetService("DataStoreService")
 
-local Shared = script.Parent.Parent.Parent.ReplicatedStorage.Shared
+local Shared = game:GetService("ReplicatedStorage").Shared
 local Core = Shared.Core
 local Config = Shared.Config
 
@@ -28,6 +28,7 @@ local Balance = require(Config.Balance)
 local Flags = require(Config.Flags)
 
 local InHouseProvider = require(script.Parent.Parent.Data.InHouseProvider)
+local Bootstrap = require(script.Parent.Parent.Data.Bootstrap)
 local MockProvider = require(script.Parent.Parent.Data.MockProvider)
 
 local DataService = {}
@@ -84,11 +85,18 @@ local function resolveProvider(): any
 	return MockProvider.new()
 end
 
+--[[
+	Migrate + reconcile a saved profile, then apply the bootstrap invariants (starter
+	parcel, starter building, district rows).
+
+	`LastSaved` is deliberately left as stored: `OfflineService` measures elapsed time
+	from it, so overwriting it here would silently disable offline income.
+]]
 local function normalise(data: any, now: number): Profile.Profile
 	local profile = Profile.normalise(data, now)
 	profile.Time.LastSeen = now
-	profile.Time.LastSaved = now
 	profile.Version = Profile.CURRENT_VERSION
+	Bootstrap.apply(profile, now)
 	return profile
 end
 

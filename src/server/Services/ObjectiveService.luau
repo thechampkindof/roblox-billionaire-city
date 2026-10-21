@@ -8,7 +8,7 @@
 	objective goes through this single path, so adding content is a data edit.
 ]]
 
-local Shared = script.Parent.Parent.Parent.ReplicatedStorage.Shared
+local Shared = game:GetService("ReplicatedStorage").Shared
 local Core = Shared.Core
 local Config = Shared.Config
 

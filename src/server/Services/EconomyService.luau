@@ -10,7 +10,7 @@
 	  * emits one economy log event per transaction.
 ]]
 
-local Shared = script.Parent.Parent.Parent.ReplicatedStorage.Shared
+local Shared = game:GetService("ReplicatedStorage").Shared
 local Core = Shared.Core
 local Config = Shared.Config
 local Util = Shared.Util

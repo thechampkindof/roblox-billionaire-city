@@ -14,7 +14,7 @@
 
 local Workspace = game:GetService("Workspace")
 
-local Shared = script.Parent.Parent.Parent.ReplicatedStorage.Shared
+local Shared = game:GetService("ReplicatedStorage").Shared
 local Core = Shared.Core
 local Config = Shared.Config
 

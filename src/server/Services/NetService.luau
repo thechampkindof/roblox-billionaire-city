@@ -12,7 +12,7 @@
 	No `InvokeClient` anywhere. No client-computed money.
 ]]
 
-local Shared = script.Parent.Parent.Parent.ReplicatedStorage.Shared
+local Shared = game:GetService("ReplicatedStorage").Shared
 local Core = Shared.Core
 local Config = Shared.Config
 local Net = Shared.Net
@@ -70,7 +70,9 @@ local function dispatch(player: Player, intent: string, payload: any)
 	end
 	local allowed, retryAfter = limiter:Allow(player.UserId, intent)
 	if not allowed then
-		reject(player, "RATE_LIMITED", `retry in {string.format("%.1f", retryAfter)}s`)
+		-- The player gets the friendly string; the retry time is diagnostic only.
+		NetService.Rejected:Fire(player, "RATE_LIMITED", retryAfter)
+		toast(player, Content.strings.errors.RATE_LIMITED, "error")
 		return
 	end
 	if not DataService.IsLoaded(player) then
@@ -84,7 +86,11 @@ local function dispatch(player: Player, intent: string, payload: any)
 		return
 	end
 
-	local ok, result = pcall(handler, player, payload)
+	local ok, result = xpcall(function()
+		return handler(player, payload)
+	end, function(message: any)
+		return `{tostring(message)}\n{debug.traceback("", 2)}`
+	end)
 	if not ok then
 		warn(`[NetService] {intent} handler errored: {tostring(result)}`)
 		reject(player, "INVALID_PAYLOAD")
@@ -109,7 +115,7 @@ function NetService.Init(registry: any)
 			return require(script.Parent.ParcelService).Purchase(player, payload.parcelId)
 		end)
 		NetService.Register("ConstructStart", function(player: Player, payload: any)
-			local result = require(script.Parent.ConstructionService).Start(
+			local result = require(script.Parent.ConstructionService).StartConstruction(
 				player,
 				payload.parcelId,
 				payload.buildingId

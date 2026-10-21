@@ -159,6 +159,20 @@ const exportsByModule = new Map();
 const moduleNamePattern = /function\s+([A-Za-z_]\w*)[.:]([A-Za-z_]\w*)/g;
 const fieldPattern = /^\s*([A-Za-z_]\w*)\.([A-Za-z_]\w*)\s*(?==)/gm;
 const typePattern = /export\s+type\s+([A-Za-z_]\w*)/g;
+const definitionPattern = /function\s+([A-Za-z_]\w*)[.:]([A-Za-z_]\w*)/g;
+for (const [file, source] of sources) {
+  // Two functions with the same exported name silently shadow each other (a service's
+  // lifecycle `Start()` versus a gameplay `Start(player, ...)` is the classic case).
+  const defined = new Map();
+  for (const match of source.matchAll(definitionPattern)) {
+    const key = `${match[1]}.${match[2]}`;
+    defined.set(key, (defined.get(key) ?? 0) + 1);
+  }
+  for (const [key, times] of defined) {
+    if (times > 1) note(file, `${key} is defined ${times} times (later definition wins)`);
+  }
+}
+
 for (const [file, source] of sources) {
   const name = path.basename(file).replace(/(?:\.[a-z]+)?\.luau$/, '');
   const members = new Set();

@@ -7,7 +7,7 @@
 	A manager automates collection and requires a minimum building level.
 ]]
 
-local Shared = script.Parent.Parent.Parent.ReplicatedStorage.Shared
+local Shared = game:GetService("ReplicatedStorage").Shared
 local Core = Shared.Core
 local Config = Shared.Config
 local Util = Shared.Util

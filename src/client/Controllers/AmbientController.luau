@@ -58,7 +58,7 @@ local function createAgent(index: number): BasePart
 end
 
 function AmbientController.Start()
-	if not Config.Flags.get("AmbientLife") then
+	if not Content.Flags.get("AmbientLife") then
 		return
 	end
 	local budget = qualityBudget()

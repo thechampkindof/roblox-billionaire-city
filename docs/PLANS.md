@@ -46,9 +46,12 @@ Phase 0 (foundation) and Phase 1 (playable vertical slice) are implemented:
 
 ## Risks
 
-- **Unexecuted runtime paths.** The service layer compiles and passes static wiring checks
-  but has not been run in Studio here. The first playtest should be treated as a bug hunt,
-  not a formality.
+- **Client runtime paths are unexecuted.** The server layer now runs headlessly
+  (`tools/server_sim.mjs`, 47 assertions), but the client controllers and UI have only been
+  compiled and reviewed. The first Studio playtest is a bug hunt for the client.
+- **First harness run found seven real defects** (require paths, missing bootstrap, wiped
+  `LastSaved`, shadowed `ConstructionService.Start`, `Config.Flags` misuse, double `PivotTo`,
+  an unfriendly rate-limit message). Assume more are hiding behind the client.
 - **Economy tuning** is provisional and measured only against a greedy bot.
 - **Rojo build** is unverified in this environment (no glibc); CI is the authority.
 - **Profile growth** in Phase 2 (supply chains, collections) is the next budget pressure.

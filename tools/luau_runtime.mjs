@@ -126,17 +126,17 @@ export async function createRuntime(repoRoot, roots = ['src', 'tests', 'tools'])
 		if (loading.has(nodePath)) throw new Error(`require: circular dependency at "${nodePath}"`);
 		if (!node.source) throw new Error(`require: "${nodePath}" has no source`);
 		loading.add(nodePath);
-		const previousScript = lua.globals.rawGet('script');
 		try {
-			lua.globals.set('script', nodeHandles.get(nodePath));
-			const result = lua.execute(node.source);
+			// `script` is bound as a *local* per chunk, exactly like Roblox does. That keeps
+			// `require(script.Parent.X)` working inside functions that run long after the
+			// module loaded (intent handlers), which a shared global would break.
+			const chunk = lua.load(`local script = ...\n${node.source}`, { chunkName: `=${nodePath}` });
+			const result = chunk.call(nodeHandles.get(nodePath));
 			const value = result.length > 0 && result[0] !== undefined ? result[0] : null;
 			cache.set(nodePath, value);
 			return value;
 		} finally {
 			loading.delete(nodePath);
-			// Nested requires change `script`; restore the caller's instance.
-			if (previousScript !== undefined) lua.globals.set('script', previousScript);
 		}
 	});
 	lua.globals.set('require', requireNode);

@@ -7,7 +7,7 @@
 	next tick. The whole build cost is paid up front; phases then advance themselves.
 ]]
 
-local Shared = script.Parent.Parent.Parent.ReplicatedStorage.Shared
+local Shared = game:GetService("ReplicatedStorage").Shared
 local Core = Shared.Core
 local Config = Shared.Config
 
@@ -87,8 +87,13 @@ local function advanceState(state: any): (boolean, boolean)
 	return changed, finished
 end
 
---[[ Starts construction on an owned, empty parcel. ]]
-function ConstructionService.Start(
+--[[
+	Starts construction on an owned, empty parcel.
+
+	Named `StartConstruction`, not `Start`: every service also exposes a lifecycle
+	`Start()` for the registry, and a shared name would silently shadow this one.
+]]
+function ConstructionService.StartConstruction(
 	player: Player,
 	parcelId: string,
 	buildingId: string

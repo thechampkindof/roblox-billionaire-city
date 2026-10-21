@@ -117,6 +117,10 @@ the *target* for a first-time player and the tuning input for `BALANCING.md`.
 - [ ] Stop the server twice quickly and rejoin: the session lock resolves within ~60 s and
       the profile still loads (toast may say "Your city is open in another server").
 
+**Note:** everything in sections A–G (except rendering) is also covered by
+`node tools/server_sim.mjs`. If that passes and Smoke-01 fails, the bug is in the client,
+the camera or replication — not the server rules.
+
 **Sign-off**
 
 ```
@@ -133,6 +137,7 @@ Notes / surprises:
 
 ```bash
 node tools/run_tests.mjs
+node tools/server_sim.mjs
 node tools/syntax_check.mjs
 node tools/wiring_check.mjs
 node tools/run_luau.mjs tools/content_validate.luau
